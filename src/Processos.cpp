@@ -44,7 +44,7 @@ char menuPrincipal()
 {
     printf("----------------------------------------------------------\n");
     printf("Executando no processo com PID %i\n", getpid());
-    printf("Insira + opção desejada:\n");
+    printf("Insira a opção desejada:\n");
     printf("+ -> Adicionar 500$\n");
     printf("- -> Subtrair 500$\n");
     printf("m -> Mostrar o saldo\n");
