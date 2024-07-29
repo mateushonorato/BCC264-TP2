@@ -75,7 +75,7 @@ int main()
     }
     if (write(pipeSaldo[WRITE_END], &saldo, sizeof(int)) == -1)
     {
-        printf("Erro ao escrever no pipe\n");
+        fprintf(stderr, "Erro ao escrever no pipe\n");
         return 1;
     }
 
