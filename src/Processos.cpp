@@ -4,89 +4,156 @@
 #include <sys/wait.h>
 #include <string.h>
 
-#define BUFFER_SIZE 25
 #define READ_END 0
 #define WRITE_END 1
 
-int saldo = 0;
-
-void print_saldo(int *pipe_fd)
+void mostrarSaldo(int *pipeSaldo)
 {
-    char buffer[BUFFER_SIZE];
-    close(pipe_fd[WRITE_END]);
-    while (read(pipe_fd[READ_END], buffer, BUFFER_SIZE) > 0)
-    {
-        printf("Executando no processo com pid %i\n", getpid());
-        printf("Saldo: %s\n", buffer);
-    }
-    close(pipe_fd[READ_END]);
+    int saldo;
+    read(pipeSaldo[READ_END], &saldo, sizeof(int));
+    printf("----------------------------------------------------------\n");
+    printf("Executando no processo com PID %i\n", getpid());
+    printf("Saldo: %i$\n", saldo);
+    write(pipeSaldo[WRITE_END], &saldo, sizeof(int));
 }
 
-void increment_saldo(int *pipe_fd)
+void adicionarSaldo(int *pipeSaldo)
 {
-    close(pipe_fd[READ_END]);
+    printf("----------------------------------------------------------\n");
+    printf("Adicionando 500$ ao saldo no processo com PID %i\n", getpid());
+    int saldo;
+    read(pipeSaldo[READ_END], &saldo, sizeof(int));
+    printf("Saldo Anterior: %i$\n", saldo);
     saldo += 500;
-    char buffer[BUFFER_SIZE];
-    printf("Adicionando 500 ao saldo no processo com pid %i\n", getpid());
-    snprintf(buffer, sizeof(buffer), "%d", saldo);
-    write(pipe_fd[WRITE_END], buffer, strlen(buffer) + 1);
-    close(pipe_fd[WRITE_END]);
+    printf("Saldo Atual: %i$\n", saldo);
+    write(pipeSaldo[WRITE_END], &saldo, sizeof(int));
 }
 
-void decrement_saldo(int *pipe_fd)
+void subtrairSaldo(int *pipeSaldo)
 {
-    close(pipe_fd[READ_END]);
+    printf("----------------------------------------------------------\n");
+    printf("Subtraindo 500$ do saldo no processo com PID %i\n", getpid());
+    int saldo;
+    read(pipeSaldo[READ_END], &saldo, sizeof(int));
+    printf("Saldo Anterior: %i$\n", saldo);
     saldo -= 500;
-    char buffer[BUFFER_SIZE];
-    printf("Subtraindo 500 do saldo no processo com pid %i\n", getpid());
-    snprintf(buffer, sizeof(buffer), "%d", saldo);
-    write(pipe_fd[WRITE_END], buffer, strlen(buffer) + 1);
-    close(pipe_fd[WRITE_END]);
+    printf("Saldo Atual: %i$\n", saldo);
+    write(pipeSaldo[WRITE_END], &saldo, sizeof(int));
+}
+
+char menuPrincipal()
+{
+    printf("----------------------------------------------------------\n");
+    printf("Executando no processo com PID %i\n", getpid());
+    printf("Insira a opção desejada:\n");
+    printf("a - Adicionar 500$\n");
+    printf("s - Subtrair 500$\n");
+    printf("m - Mostrar o saldo\n");
+    printf("x - Sair\n");
+    printf("> ");
+    char opcao = getchar();
+    getchar();
+    while (opcao != 'a' && opcao != 's' && opcao != 'm' && opcao != 'x')
+    {
+        printf("> ");
+        opcao = getchar();
+        getchar();
+    }
+    return opcao;
 }
 
 int main()
 {
-    int pipe_fd[2];
-    pid_t pid;
+    int pipeSaldo[2], pipeOpcao[2], saldo = 0;
+    pid_t pidFilho1 = -1, pidFilho2 = -1, pidFilho3 = -1;
+    char opcao;
 
-    if (pipe(pipe_fd) == -1)
+    // Iniciando o Pipe
+    if (pipe(pipeSaldo) == -1 || pipe(pipeOpcao) == -1)
     {
         fprintf(stderr, "O Pipe falhou!");
         return 1;
     }
+    if (write(pipeSaldo[WRITE_END], &saldo, sizeof(int)) == -1)
+    {
+        printf("Erro ao escrever no pipe\n");
+        return 1;
+    }
 
-    pid = fork();
-    if (pid < 0)
+    // Iniciando os processos filho
+    pidFilho1 = fork();
+    if (pidFilho1 == 0)
+    {
+        while (read(pipeOpcao[READ_END], &opcao, sizeof(char)) == 1)
+        {
+            if (opcao == 'a')
+            {
+                adicionarSaldo(pipeSaldo);
+            }
+            else
+            {
+                write(pipeOpcao[WRITE_END], &opcao, sizeof(char));
+            }
+        }
+        return 0;
+    }
+    pidFilho2 = fork();
+    if (pidFilho2 == 0)
+    {
+        while (read(pipeOpcao[READ_END], &opcao, sizeof(char)) == 1)
+        {
+            if (opcao == 's')
+            {
+                subtrairSaldo(pipeSaldo);
+            }
+            else
+            {
+                write(pipeOpcao[WRITE_END], &opcao, sizeof(char));
+            }
+        }
+        return 0;
+    }
+    pidFilho3 = fork();
+    if (pidFilho3 == 0)
+    {
+        while (read(pipeOpcao[READ_END], &opcao, sizeof(char)) == 1)
+        {
+            if (opcao == 'm')
+            {
+                mostrarSaldo(pipeSaldo);
+            }
+            else
+            {
+                write(pipeOpcao[WRITE_END], &opcao, sizeof(char));
+            }
+        }
+        return 0;
+    }
+
+    if (pidFilho1 < 0 || pidFilho2 < 0 || pidFilho3 < 0)
     {
         fprintf(stderr, "O Fork falhou!");
         return 1;
     }
 
-    if (pid == 0)
+    do
     {
-        print_saldo(pipe_fd);
-    }
-    else
-    {
-        pid = fork();
-        if (pid == 0)
+        opcao = menuPrincipal();
+
+        if (opcao == 'x')
         {
-            increment_saldo(pipe_fd);
+            close(pipeOpcao[WRITE_END]);
+            close(pipeSaldo[READ_END]);
+            close(pipeSaldo[WRITE_END]);
+            kill(pidFilho1, SIGKILL);
+            kill(pidFilho2, SIGKILL);
+            kill(pidFilho3, SIGKILL);
+            return 0;
         }
-        else
-        {
-            pid = fork();
-            if (pid == 0)
-            {
-                decrement_saldo(pipe_fd);
-            }
-            else
-            {
-                wait(nullptr);
-                wait(nullptr);
-                wait(nullptr);
-            }
-        }
-    }
+
+        write(pipeOpcao[WRITE_END], &opcao, sizeof(char));
+        sleep(1);
+    } while (opcao != 'x' && pidFilho1 > 0 && pidFilho2 > 0 && pidFilho3 > 0);
+
     return 0;
 }
