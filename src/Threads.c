@@ -46,11 +46,13 @@ char menuPrincipal()
     printf("m -> Mostrar o saldo\n");
     printf("s -> Sair\n");
     printf("> ");
+    fflush(stdout);
     char opcao = getchar();
     getchar();
     while (opcao != '+' && opcao != '-' && opcao != 'm' && opcao != 's')
     {
         printf("> ");
+        fflush(stdout);
         opcao = getchar();
         getchar();
     }
@@ -79,8 +81,6 @@ int main()
         else if (opcao == 'm')
         {
             pthread_create(&(threads[2]), NULL, mostrarSaldo, NULL);
-            pthread_join(threads[0], NULL);
-            pthread_join(threads[1], NULL);
             pthread_join(threads[2], NULL);
         }
     } while (opcao != 's');

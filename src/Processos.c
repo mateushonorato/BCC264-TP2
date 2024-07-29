@@ -50,11 +50,13 @@ char menuPrincipal()
     printf("m -> Mostrar o saldo\n");
     printf("s -> Sair\n");
     printf("> ");
+    fflush(stdout);
     char opcao = getchar();
     getchar();
     while (opcao != '+' && opcao != '-' && opcao != 'm' && opcao != 's')
     {
         printf("> ");
+        fflush(stdout);
         opcao = getchar();
         getchar();
     }

@@ -1,7 +1,5 @@
-FROM ubuntu:latest
-RUN apt-get update
-RUN apt-get upgrade -y
-RUN apt-get install -y gcc make
+FROM alpine:latest
+RUN apk add --no-cache gcc make musl-dev
 COPY src /MateusHonorato/src
 COPY Makefile /MateusHonorato
 RUN cd /MateusHonorato && make all
