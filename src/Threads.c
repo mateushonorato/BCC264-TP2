@@ -86,8 +86,8 @@ int main()
     } while (opcao != 's');
 
     // Quando o usuário insere a opção 's', o loop é finalizado, e podemos assim encerrar as threads e terminar a execução
-    pthread_kill(threads[0], 0);
-    pthread_kill(threads[1], 0);
-    pthread_kill(threads[2], 0);
+    // pthread_kill(threads[0], 0);
+    // pthread_kill(threads[1], 0);
+    // pthread_kill(threads[2], 0);
     return 0;
 }
