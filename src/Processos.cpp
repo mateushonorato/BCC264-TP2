@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <string.h>
 
 #define READ_END 0
 #define WRITE_END 1
@@ -81,6 +80,9 @@ int main()
     }
 
     // Iniciando os processos filho
+    // Todos os processos filhos ficam aguardando receber a opção inserida pelo usuário através do pipeOpcao.
+    // O processo verifica se a opção corresponde a ele. Caso sim, executa a operação. Caso não, repassa a opção para os demais processos.
+    // O processo filho 1 será responsável por adicionar o saldo
     pidFilho1 = fork();
     if (pidFilho1 == 0)
     {
@@ -97,6 +99,7 @@ int main()
         }
         return 0;
     }
+    // O processo filho 1 será responsável por subtrair do saldo
     pidFilho2 = fork();
     if (pidFilho2 == 0)
     {
@@ -113,6 +116,7 @@ int main()
         }
         return 0;
     }
+    // O processo filho 1 será responsável por mostrar o saldo na tela (print)
     pidFilho3 = fork();
     if (pidFilho3 == 0)
     {
@@ -130,30 +134,27 @@ int main()
         return 0;
     }
 
+    // Verificando se todos os processos filhos iniciaram corretamente
     if (pidFilho1 < 0 || pidFilho2 < 0 || pidFilho3 < 0)
     {
         fprintf(stderr, "O Fork falhou!");
         return 1;
     }
 
+    // Executando o menu de opções (apenas no processo pai)
     do
     {
         opcao = menuPrincipal();
-
-        if (opcao == 's')
-        {
-            close(pipeOpcao[WRITE_END]);
-            close(pipeSaldo[READ_END]);
-            close(pipeSaldo[WRITE_END]);
-            kill(pidFilho1, SIGKILL);
-            kill(pidFilho2, SIGKILL);
-            kill(pidFilho3, SIGKILL);
-            return 0;
-        }
-
         write(pipeOpcao[WRITE_END], &opcao, sizeof(char));
         sleep(1);
     } while (opcao != 's' && pidFilho1 > 0 && pidFilho2 > 0 && pidFilho3 > 0);
 
+    // Quando o usuário insere a opção 's', o loop é finalizado, e podemos assim encerrar os processos filhos e terminar a execução
+    close(pipeOpcao[WRITE_END]);
+    close(pipeSaldo[READ_END]);
+    close(pipeSaldo[WRITE_END]);
+    kill(pidFilho1, SIGKILL);
+    kill(pidFilho2, SIGKILL);
+    kill(pidFilho3, SIGKILL);
     return 0;
 }
