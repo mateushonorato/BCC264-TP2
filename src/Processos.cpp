@@ -16,6 +16,7 @@ void print_saldo(int *pipe_fd)
     close(pipe_fd[WRITE_END]);
     while (read(pipe_fd[READ_END], buffer, BUFFER_SIZE) > 0)
     {
+        printf("Executando no processo com pid %i\n", getpid());
         printf("Saldo: %s\n", buffer);
     }
     close(pipe_fd[READ_END]);
@@ -26,6 +27,7 @@ void increment_saldo(int *pipe_fd)
     close(pipe_fd[READ_END]);
     saldo += 500;
     char buffer[BUFFER_SIZE];
+    printf("Adicionando 500 ao saldo no processo com pid %i\n", getpid());
     snprintf(buffer, sizeof(buffer), "%d", saldo);
     write(pipe_fd[WRITE_END], buffer, strlen(buffer) + 1);
     close(pipe_fd[WRITE_END]);
@@ -36,6 +38,7 @@ void decrement_saldo(int *pipe_fd)
     close(pipe_fd[READ_END]);
     saldo -= 500;
     char buffer[BUFFER_SIZE];
+    printf("Subtraindo 500 do saldo no processo com pid %i\n", getpid());
     snprintf(buffer, sizeof(buffer), "%d", saldo);
     write(pipe_fd[WRITE_END], buffer, strlen(buffer) + 1);
     close(pipe_fd[WRITE_END]);
@@ -48,14 +51,14 @@ int main()
 
     if (pipe(pipe_fd) == -1)
     {
-        fprintf(stderr, "Pipe failed");
+        fprintf(stderr, "O Pipe falhou!");
         return 1;
     }
 
     pid = fork();
     if (pid < 0)
     {
-        fprintf(stderr, "Fork failed");
+        fprintf(stderr, "O Fork falhou!");
         return 1;
     }
 
@@ -77,12 +80,12 @@ int main()
             {
                 decrement_saldo(pipe_fd);
             }
-            // else
-            // {
-            //     wait(NULL);
-            //     wait(NULL);
-            //     wait(NULL);
-            // }
+            else
+            {
+                wait(nullptr);
+                wait(nullptr);
+                wait(nullptr);
+            }
         }
     }
     return 0;
