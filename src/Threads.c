@@ -11,7 +11,7 @@ int saldo = 0;
 void *mostrarSaldo(void *arg)
 {
     printf("----------------------------------------------------------\n");
-    printf("Executando na thread com TID %i\n", syscall(SYS_gettid));
+    printf("Executando na thread com TID %li\n", syscall(SYS_gettid));
     printf("Saldo: %i$\n", saldo);
     pthread_exit(0);
 }
@@ -19,7 +19,7 @@ void *mostrarSaldo(void *arg)
 void *adicionarSaldo(void *arg)
 {
     printf("----------------------------------------------------------\n");
-    printf("Adicionando 500$ ao saldo na thread com TID %i\n", syscall(SYS_gettid));
+    printf("Adicionando 500$ ao saldo na thread com TID %li\n", syscall(SYS_gettid));
     printf("Saldo Anterior: %i$\n", saldo);
     saldo += 500;
     printf("Saldo Atual: %i$\n", saldo);
@@ -29,7 +29,7 @@ void *adicionarSaldo(void *arg)
 void *subtrairSaldo(void *arg)
 {
     printf("----------------------------------------------------------\n");
-    printf("Subtraindo 500$ do saldo na thread com TID %i\n", syscall(SYS_gettid));
+    printf("Subtraindo 500$ do saldo na thread com TID %li\n", syscall(SYS_gettid));
     printf("Saldo Anterior: %i$\n", saldo);
     saldo -= 500;
     printf("Saldo Atual: %i$\n", saldo);
