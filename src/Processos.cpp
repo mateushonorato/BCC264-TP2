@@ -45,15 +45,15 @@ char menuPrincipal()
 {
     printf("----------------------------------------------------------\n");
     printf("Executando no processo com PID %i\n", getpid());
-    printf("Insira a opção desejada:\n");
-    printf("a - Adicionar 500$\n");
-    printf("s - Subtrair 500$\n");
-    printf("m - Mostrar o saldo\n");
-    printf("x - Sair\n");
+    printf("Insira + opção desejada:\n");
+    printf("+ -> Adicionar 500$\n");
+    printf("- -> Subtrair 500$\n");
+    printf("m -> Mostrar o saldo\n");
+    printf("s -> Sair\n");
     printf("> ");
     char opcao = getchar();
     getchar();
-    while (opcao != 'a' && opcao != 's' && opcao != 'm' && opcao != 'x')
+    while (opcao != '+' && opcao != '-' && opcao != 'm' && opcao != 's')
     {
         printf("> ");
         opcao = getchar();
@@ -86,7 +86,7 @@ int main()
     {
         while (read(pipeOpcao[READ_END], &opcao, sizeof(char)) == 1)
         {
-            if (opcao == 'a')
+            if (opcao == '+')
             {
                 adicionarSaldo(pipeSaldo);
             }
@@ -102,7 +102,7 @@ int main()
     {
         while (read(pipeOpcao[READ_END], &opcao, sizeof(char)) == 1)
         {
-            if (opcao == 's')
+            if (opcao == '-')
             {
                 subtrairSaldo(pipeSaldo);
             }
@@ -140,7 +140,7 @@ int main()
     {
         opcao = menuPrincipal();
 
-        if (opcao == 'x')
+        if (opcao == 's')
         {
             close(pipeOpcao[WRITE_END]);
             close(pipeSaldo[READ_END]);
@@ -153,7 +153,7 @@ int main()
 
         write(pipeOpcao[WRITE_END], &opcao, sizeof(char));
         sleep(1);
-    } while (opcao != 'x' && pidFilho1 > 0 && pidFilho2 > 0 && pidFilho3 > 0);
+    } while (opcao != 's' && pidFilho1 > 0 && pidFilho2 > 0 && pidFilho3 > 0);
 
     return 0;
 }
